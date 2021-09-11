@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.doorbash:backend-services-android:master-SNAPSHOT'
+    implementation 'com.github.doorbash:backend-services-android:-SNAPSHOT'
 }
 ```
 
