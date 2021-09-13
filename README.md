@@ -28,3 +28,6 @@ Client.init(this, new ClientOptions(
 BackendServicesNotificationsClient.enqueueWorker(this);
 BackendServicesRemoteConfigClient.enqueueWorker(this);
 ```
+
+## Usage examples
+- [backend-services-android-demo](https://github.com/doorbash/backend-services-android-demo)
