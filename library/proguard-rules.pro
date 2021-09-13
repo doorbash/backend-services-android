@@ -32,7 +32,3 @@
 -keep class com.bumptech.glide.load.data.ParcelFileDescriptorRewinder$InternalRewinder {
   *** rewind();
 }
-
-# Glide-OkHttp3
--keep class backend.services.util.UnsafeGlideModule
--keep class com.bumptech.glide.GeneratedAppGlideModuleImpl
