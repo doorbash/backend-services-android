@@ -16,7 +16,7 @@ dependencies {
 
 ## Usage
 ```java
-new Client(new ClientOptions(
+Client.init(this, new ClientOptions(
         BuildConfig.VERSION_CODE,
         "com.example.project",
         "https://your.domain.com/api",
@@ -24,7 +24,7 @@ new Client(new ClientOptions(
         false,
         R.drawable.ic_demo_notification_icon,
         MainActivity.class
-)).init(this);
+));
 BackendServicesNotificationsClient.enqueueWorker(this);
 BackendServicesRemoteConfigClient.enqueueWorker(this);
 ```
