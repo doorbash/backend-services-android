@@ -5,6 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.work.*
 import backend.services.Client
+import backend.services.NotOKException
 import backend.services.SHARED_PREFERENCES_NAME
 import backend.services.async.Async
 import backend.services.callbacks.Cancelable
@@ -38,8 +39,12 @@ class BackendServicesRemoteConfigClient {
                 context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
             val lastVersion = rcSharedPreferences.getInt(SHARED_PREFS_KEY_RC_VERSION, 0)
             val client = Client().init(context)
-            val result =
+            val result = try {
                 client.httpRequest("/${client.options!!.projectId}/rc?version=$lastVersion") as JSONObject
+            } catch (e: NotOKException) {
+                Log.e(this::class.java.simpleName, "error: ${e.message}")
+                return
+            }
             val data = result.getJSONObject("data")
             val version = result.getInt("version")
             if (lastVersion > 0 && version <= lastVersion) {

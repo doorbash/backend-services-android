@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat.*
 import androidx.work.*
 import backend.services.Client
+import backend.services.NotOKException
 import backend.services.SHARED_PREFERENCES_NAME
 import backend.services.async.Async
 import backend.services.callbacks.Cancelable
@@ -40,16 +42,18 @@ class BackendServicesNotificationsClient {
             val notificationsSharedPreferences =
                 context.getSharedPreferences(NOTIFICATIONS_SHARED_PREF_NAME, MODE_PRIVATE)
             val client = Client().init(context)
-            val lastTime =
-                notificationsSharedPreferences.getString(
-                    SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME,
-                    ""
-                )
-            val result =
+            val lastTime = notificationsSharedPreferences.getString(
+                SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME,
+                ""
+            )
+            val result = try {
                 client.httpRequest("/${client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
+            } catch (e: NotOKException) {
+                Log.e(this::class.java.simpleName, "error: ${e.message}")
+                return arrayListOf()
+            }
             val notifications = result["notifications"] as JSONArray
             val time = result["time"] as String
-
             val list = ArrayList<Notification>()
             for (i in 0 until notifications.length()) {
                 val nobj = notifications[i] as JSONObject
