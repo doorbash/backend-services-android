@@ -21,7 +21,7 @@ new Client(new ClientOptions(
         "com.example.project",
         "https://your.domain/api",
         10,
-        true,
+        false,
         R.drawable.ic_demo_notification_icon,
         MainActivity.class
 )).init(this);

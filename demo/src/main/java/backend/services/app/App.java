@@ -13,9 +13,9 @@ public class App extends Application {
         new Client(new ClientOptions(
                 BuildConfig.VERSION_CODE,
                 "com.example.project",
-                "https://192.168.1.201/api",
+                "https://your.domain.com/api",
                 10,
-                true,
+                false,
                 R.drawable.ic_demo_notification_icon,
                 MainActivity.class
         )).init(this);
