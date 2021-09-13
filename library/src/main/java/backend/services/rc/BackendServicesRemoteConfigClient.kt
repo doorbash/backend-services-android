@@ -19,9 +19,9 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 private const val MIN_FETCH_INTERVAL = 10 // minutes
+private const val RC_DATA_SHARED_PREF_NAME = "backend.services.rc"
 private const val SHARED_PREFS_KEY_RC_LAST_FETCH = "rc_last_fetch_time"
 private const val SHARED_PREFS_KEY_RC_VERSION = "____version____"
-private const val RC_DATA_SHARED_PREF_NAME = "backend.services.rc"
 private const val RC_WORKER_NAME = "backend.services.rc"
 
 class RemoteConfigBadVersionException(message: String?) : Exception(message)
@@ -35,14 +35,17 @@ class BackendServicesRemoteConfigClient {
             val now = System.currentTimeMillis()
             if (now - lastFetchTime < MIN_FETCH_INTERVAL * 60 * 1000)
                 throw Exception("fetch interval limit: please try ${(MIN_FETCH_INTERVAL * 60 * 1000 - now + lastFetchTime) / 1000} seconds later")
+            Client.init(context)
             val rcSharedPreferences =
-                context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+                context.getSharedPreferences(
+                    "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                    MODE_PRIVATE
+                )
             val lastVersion = rcSharedPreferences.getInt(SHARED_PREFS_KEY_RC_VERSION, 0)
-            val client = Client().init(context)
             val result = try {
-                client.httpRequest("/${client.options!!.projectId}/rc?version=$lastVersion") as JSONObject
+                Client.httpRequest("/${Client.options!!.projectId}/rc?version=$lastVersion") as JSONObject
             } catch (e: NotOKException) {
-                Log.e(this::class.java.simpleName, "error: ${e.message}")
+                Log.e(javaClass.simpleName, "error: ${e.message}")
                 return
             }
             val data = result.getJSONObject("data")
@@ -50,7 +53,7 @@ class BackendServicesRemoteConfigClient {
             if (lastVersion > 0 && version <= lastVersion) {
                 throw RemoteConfigBadVersionException("expected version > $lastVersion. get version $version")
             }
-            Log.d(this::class.java.simpleName, "remote config: version: $version")
+            Log.d(javaClass.simpleName, "remote config: version: $version")
             val edit = rcSharedPreferences.edit()
             for (key in data.keys()) {
                 when (val value = data.get(key)) {
@@ -104,35 +107,50 @@ class BackendServicesRemoteConfigClient {
         @JvmStatic
         @JvmOverloads
         public fun getBoolean(context: Context, key: String, default: Boolean = false): Boolean {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getBoolean(key, default)
         }
 
         @JvmStatic
         @JvmOverloads
         public fun getInt(context: Context, key: String, default: Int = 0): Int {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getInt(key, default)
         }
 
         @JvmStatic
         @JvmOverloads
         public fun getLong(context: Context, key: String, default: Long = 0L): Long {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getLong(key, default)
         }
 
         @JvmStatic
         @JvmOverloads
         public fun getFloat(context: Context, key: String, default: Float = 0f): Float {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getFloat(key, default)
         }
 
         @JvmStatic
         @JvmOverloads
         public fun getString(context: Context, key: String, default: String? = null): String? {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getString(key, default)
         }
 
@@ -143,7 +161,10 @@ class BackendServicesRemoteConfigClient {
             key: String,
             default: Set<String>? = null
         ): Set<String>? {
-            return context.getSharedPreferences(RC_DATA_SHARED_PREF_NAME, MODE_PRIVATE)
+            return context.getSharedPreferences(
+                "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
+                MODE_PRIVATE
+            )
                 .getStringSet(key, default)
         }
 

@@ -9,7 +9,7 @@ import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
 import java.util.concurrent.TimeUnit
 
-internal const val SHARED_PREFERENCES_NAME = "backend.services.data"
+internal const val SHARED_PREFERENCES_NAME = "backend.services"
 private const val SHARED_PREFS_KEY_VERSION_CODE = "version_code"
 private const val SHARED_PREFS_KEY_PROJECT_ID = "project_id"
 private const val SHARED_PREFS_KEY_BASE_URL = "base_url"
@@ -20,8 +20,21 @@ private const val SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY = "notification
 
 class NotOKException(message: String?) : Exception(message)
 
-class Client(var options: ClientOptions? = null) {
+object Client {
+    public var options: ClientOptions? = null
     private lateinit var httpClient: OkHttpClient
+
+    @JvmStatic
+    public fun init(context: Context, opts: ClientOptions? = null): Client {
+        if (opts == null) {
+            options = ClientOptions.load(context)
+        } else {
+            options = opts
+            options?.save(context)
+        }
+        initHttpClient()
+        return this
+    }
 
     private fun initHttpClient() {
         httpClient =
@@ -29,17 +42,6 @@ class Client(var options: ClientOptions? = null) {
                 options!!.timeout,
                 TimeUnit.SECONDS
             ).build()
-    }
-
-    public fun init(context: Context): Client {
-        if (options == null) {
-            options = ClientOptions.load(context)
-            initHttpClient()
-        } else {
-            initHttpClient()
-            options?.save(context)
-        }
-        return this
     }
 
     suspend fun httpRequest(path: String): Any {
@@ -85,7 +87,10 @@ class ClientOptions(
             .putLong(SHARED_PREFS_KEY_TIMEOUT, timeout)
             .putBoolean(SHARED_PREFS_KEY_INSECURE, insecure)
             .putInt(SHARED_PREFS_KEY_NOTIFICATION_ICON, notificationIcon)
-            .putString(SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY, notificationDefaultActivity.name)
+            .putString(
+                SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY,
+                notificationDefaultActivity.name
+            )
             .commit()
     }
 
@@ -111,10 +116,21 @@ class ClientOptions(
             val notificationIcon =
                 sharedPreferences.getInt(SHARED_PREFS_KEY_NOTIFICATION_ICON, 0)
 
-            val notificationDefaultActivity = Class.forName(sharedPreferences.getString(
-                SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY, null) ?: throw Exception("bad notification default activity"))
+            val notificationDefaultActivity = Class.forName(
+                sharedPreferences.getString(
+                    SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY, null
+                ) ?: throw Exception("bad notification default activity")
+            )
 
-            return ClientOptions(versionCode, projectId, baseUrl, timeout, insecure, notificationIcon, notificationDefaultActivity)
+            return ClientOptions(
+                versionCode,
+                projectId,
+                baseUrl,
+                timeout,
+                insecure,
+                notificationIcon,
+                notificationDefaultActivity
+            )
         }
     }
 }

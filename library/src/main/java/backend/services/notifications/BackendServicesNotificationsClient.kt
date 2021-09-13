@@ -22,9 +22,9 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 private const val MIN_FETCH_INTERVAL = 10 // minutes
+private const val NOTIFICATIONS_SHARED_PREF_NAME = "backend.services.notifications"
 private const val SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH = "notifications_last_fetch_time"
 private const val SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME = "____last_time____"
-private const val NOTIFICATIONS_SHARED_PREF_NAME = "backend.services.notifications"
 private const val NOTIFICATIONS_WORKER_NAME = "backend.services.notifications"
 internal const val NOTIFICATIONS_CHANNEL_ID = "backend.services.notifications"
 private const val NOTIFICATIONS_CHANNEL_NAME = "Notifications"
@@ -39,17 +39,20 @@ class BackendServicesNotificationsClient {
             val now = System.currentTimeMillis()
             if (now - lastFetchTime < MIN_FETCH_INTERVAL * 60 * 1000)
                 throw Exception("fetch interval limit: please try ${(MIN_FETCH_INTERVAL * 60 * 1000 - now + lastFetchTime) / 1000} seconds later")
+            Client.init(context)
             val notificationsSharedPreferences =
-                context.getSharedPreferences(NOTIFICATIONS_SHARED_PREF_NAME, MODE_PRIVATE)
-            val client = Client().init(context)
+                context.getSharedPreferences(
+                    "${Client.options!!.projectId}-$NOTIFICATIONS_SHARED_PREF_NAME",
+                    MODE_PRIVATE
+                )
             val lastTime = notificationsSharedPreferences.getString(
                 SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME,
                 ""
             )
             val result = try {
-                client.httpRequest("/${client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
+                Client.httpRequest("/${Client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
             } catch (e: NotOKException) {
-                Log.e(this::class.java.simpleName, "error: ${e.message}")
+                Log.e(javaClass.simpleName, "error: ${e.message}")
                 return arrayListOf()
             }
             val notifications = result["notifications"] as JSONArray
@@ -64,7 +67,7 @@ class BackendServicesNotificationsClient {
 
                 val text = nobj["text"] as String
 
-                val icon = client.options!!.notificationIcon
+                val icon = Client.options!!.notificationIcon
 
                 val image = if (nobj.has("image")) nobj.getString("image") else ""
 
@@ -85,7 +88,7 @@ class BackendServicesNotificationsClient {
 
                 val action = when (val actionString =
                     if (nobj.has("action")) nobj.getString("action") else null) {
-                    null -> OpenActivityAction(client.options!!.notificationDefaultActivity, 0)
+                    null -> OpenActivityAction(Client.options!!.notificationDefaultActivity, 0)
                     "activity" -> OpenActivityAction(
                         Class.forName(nobj["extra"] as String),
                         Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -95,7 +98,7 @@ class BackendServicesNotificationsClient {
                         val parts = nobj.getString("extra").split(" ")
                         if (parts.size != 2) continue
                         val version = parts[1].toIntOrNull() ?: continue
-                        if (client.options!!.versionCode >= version) continue
+                        if (Client.options!!.versionCode >= version) continue
                         OpenLinkAction(parts[0])
                     }
                     else -> continue
