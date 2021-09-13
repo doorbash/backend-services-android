@@ -29,5 +29,5 @@ BackendServicesNotificationsClient.enqueueWorker(this);
 BackendServicesRemoteConfigClient.enqueueWorker(this);
 ```
 
-## Usage examples
+## Examples
 - [backend-services-android-demo](https://github.com/doorbash/backend-services-android-demo)
