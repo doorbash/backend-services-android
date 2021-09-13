@@ -19,7 +19,7 @@ dependencies {
 new Client(new ClientOptions(
         BuildConfig.VERSION_CODE,
         "com.example.project",
-        "https://your.domain/api",
+        "https://your.domain.com/api",
         10,
         false,
         R.drawable.ic_demo_notification_icon,
