@@ -22,8 +22,7 @@ Client.init(this, new ClientOptions(
         "https://your.domain.com/api",
         10,
         false,
-        R.drawable.ic_demo_notification_icon,
-        MainActivity.class
+        R.drawable.ic_demo_notification_icon
 ));
 BackendServicesNotificationsClient.enqueueWorker(this);
 BackendServicesRemoteConfigClient.enqueueWorker(this);
