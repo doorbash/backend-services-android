@@ -16,7 +16,6 @@ private const val SHARED_PREFS_KEY_BASE_URL = "base_url"
 private const val SHARED_PREFS_KEY_TIMEOUT = "timeout"
 private const val SHARED_PREFS_KEY_INSECURE = "insecure"
 private const val SHARED_PREFS_KEY_NOTIFICATION_ICON = "notification_icon"
-private const val SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY = "notification_default_activity"
 
 class NotOKException(message: String?) : Exception(message)
 
@@ -66,7 +65,6 @@ class ClientOptions(
     val timeout: Long,
     val insecure: Boolean,
     val notificationIcon: Int,
-    val notificationDefaultActivity: Class<*>
 ) {
 
     private val projectRegex = Regex("^[A-Za-z0-9._-]+")
@@ -87,10 +85,6 @@ class ClientOptions(
             .putLong(SHARED_PREFS_KEY_TIMEOUT, timeout)
             .putBoolean(SHARED_PREFS_KEY_INSECURE, insecure)
             .putInt(SHARED_PREFS_KEY_NOTIFICATION_ICON, notificationIcon)
-            .putString(
-                SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY,
-                notificationDefaultActivity.name
-            )
             .commit()
     }
 
@@ -116,12 +110,6 @@ class ClientOptions(
             val notificationIcon =
                 sharedPreferences.getInt(SHARED_PREFS_KEY_NOTIFICATION_ICON, 0)
 
-            val notificationDefaultActivity = Class.forName(
-                sharedPreferences.getString(
-                    SHARED_PREFS_KEY_NOTIFICATION_DEFAULT_ACTIVITY, null
-                ) ?: throw Exception("bad notification default activity")
-            )
-
             return ClientOptions(
                 versionCode,
                 projectId,
@@ -129,7 +117,6 @@ class ClientOptions(
                 timeout,
                 insecure,
                 notificationIcon,
-                notificationDefaultActivity
             )
         }
     }

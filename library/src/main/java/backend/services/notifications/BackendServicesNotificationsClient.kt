@@ -14,6 +14,7 @@ import backend.services.NotOKException
 import backend.services.SHARED_PREFERENCES_NAME
 import backend.services.async.Async
 import backend.services.callbacks.Cancelable
+import backend.services.callbacks.Function0Void
 import backend.services.callbacks.Function1Void
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -86,20 +87,21 @@ class BackendServicesNotificationsClient {
                     else -> NotificationStyle.NORMAL
                 }
 
-                val action = when (val actionString =
-                    if (nobj.has("action")) nobj.getString("action") else null) {
-                    null -> OpenActivityAction(Client.options!!.notificationDefaultActivity, 0)
-                    "activity" -> OpenActivityAction(
-                        Class.forName(nobj["extra"] as String),
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                val action = when (if (nobj.has("action")) nobj.getString("action") else null) {
+                    "activity" -> NotificationAction(
+                        ActionType.ACTIVITY,
+                        nobj["extra"] as String,
                     )
-                    "link" -> OpenLinkAction(nobj["extra"] as String)
+                    "link" -> NotificationAction(
+                        ActionType.LINK,
+                        nobj["extra"] as String
+                    )
                     "update" -> {
                         val parts = nobj.getString("extra").split(" ")
                         if (parts.size != 2) continue
                         val version = parts[1].toIntOrNull() ?: continue
                         if (Client.options!!.versionCode >= version) continue
-                        OpenLinkAction(parts[0])
+                        NotificationAction(ActionType.LINK, parts[0])
                     }
                     else -> continue
                 }
@@ -150,6 +152,40 @@ class BackendServicesNotificationsClient {
             }
             return Cancelable { job.cancel() }
         }
+
+        private suspend fun clickedImpl(context: Context, id: Int) {
+            Client.init(context)
+            try {
+                Client.httpRequest("/${Client.options!!.projectId}/notifications/clicked?id=$id") as JSONObject
+            } catch (e: NotOKException) {
+                Log.e(javaClass.simpleName, "error: ${e.message}")
+            }
+        }
+
+
+        internal suspend fun clicked(context: Context, id: Int) {
+            withContext(Async.coroutineContext) { clickedImpl(context, id) }
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        internal fun clicked(
+            context: Context,
+            id: Int,
+            callback: Function0Void? = null,
+            onError: Function1Void<Exception>? = null
+        ): Cancelable {
+            val job = Async.launch {
+                try {
+                    clickedImpl(context, id)
+                    callback?.invoke()
+                } catch (e: Exception) {
+                    onError?.invoke(e)
+                }
+            }
+            return Cancelable { job.cancel() }
+        }
+
 
         private fun createNotificationChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

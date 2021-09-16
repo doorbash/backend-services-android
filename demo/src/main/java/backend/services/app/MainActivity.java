@@ -5,21 +5,79 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
-import backend.services.notifications.BackendServicesNotificationsClient;
-import backend.services.notifications.Notification;
-import backend.services.rc.BackendServicesRemoteConfigClient;
 import backend.services.callbacks.Cancelable;
+import backend.services.notifications.ActionType;
+import backend.services.notifications.Notification;
+import backend.services.notifications.NotificationAction;
+import backend.services.notifications.NotificationStyle;
+import backend.services.rc.BackendServicesRemoteConfigClient;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
     Cancelable remoteConfigJob;
+    int id;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        findViewById(R.id.notification_to_main_activity).setOnClickListener(view -> new Notification(
+                ++id,
+                "#" + id + " MainActivity",
+                "Opens MainActivity",
+                R.drawable.ic_demo_notification_icon,
+                "https://avatars.githubusercontent.com/u/5982526?v=4",
+                NotificationCompat.PRIORITY_HIGH,
+                NotificationStyle.NORMAL,
+                new NotificationAction(
+                        ActionType.ACTIVITY,
+                        MainActivity.class.getName()
+                )
+        ).show(this));
+        findViewById(R.id.notification_to_other_activity).setOnClickListener(view -> new Notification(
+                ++id,
+                "#" + id + " OtherActivity",
+                "Opens OtherActivity",
+                R.drawable.ic_demo_notification_icon,
+                "https://avatars.githubusercontent.com/u/5982526?v=4",
+                NotificationCompat.PRIORITY_HIGH,
+                NotificationStyle.NORMAL,
+                new NotificationAction(
+                        ActionType.ACTIVITY,
+                        OtherActivity.class.getName()
+                )
+        ).show(this));
+        findViewById(R.id.notification_to_other_activity_stack).setOnClickListener(view -> new Notification(
+                ++id,
+                "#" + id + " OtherActivity",
+                "Opens OtherActivity",
+                R.drawable.ic_demo_notification_icon,
+                "https://avatars.githubusercontent.com/u/5982526?v=4",
+                NotificationCompat.PRIORITY_HIGH,
+                NotificationStyle.NORMAL,
+                new NotificationAction(
+                        ActionType.ACTIVITY,
+                        MainActivity.class.getName() + " " + OtherActivity.class.getName()
+                )
+        ).show(this));
+        findViewById(R.id.notification_to_link).setOnClickListener(view -> new Notification(
+                ++id,
+                "#" + id + " Link",
+                "Opens a link",
+                R.drawable.ic_demo_notification_icon,
+                "https://avatars.githubusercontent.com/u/5982526?v=4",
+                NotificationCompat.PRIORITY_HIGH,
+                NotificationStyle.NORMAL,
+                new NotificationAction(
+                        ActionType.LINK,
+                        "https://github.com/doorbash/backend-services"
+                )
+        ).show(this));
     }
+
+
 
     @Override
     protected void onResume() {
@@ -33,8 +91,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, error.getMessage());
         });
     }
-
-    @Override
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");

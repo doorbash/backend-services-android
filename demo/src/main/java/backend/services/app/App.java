@@ -16,8 +16,7 @@ public class App extends Application {
                 "https://192.168.1.201/api",
                 10,
                 true,
-                R.drawable.ic_demo_notification_icon,
-                MainActivity.class
+                R.drawable.ic_demo_notification_icon
         ));
         BackendServicesNotificationsClient.enqueueWorker(this);
         BackendServicesRemoteConfigClient.enqueueWorker(this);
