@@ -62,9 +62,8 @@ class Notification(
                     intent.putExtra("extra", extraParts[1])
                     with(TaskStackBuilder.create(context)) {
                         val parentClass = Class.forName(extraParts[0])
-                        val i = Intent(context, parentClass)
                         addParentStack(parentClass)
-                        addNextIntent(i)
+                        addNextIntent(Intent(context, parentClass))
                         addNextIntent(intent)
                         getPendingIntent(id, FLAG_CANCEL_CURRENT)!!
                     }
