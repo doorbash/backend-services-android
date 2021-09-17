@@ -4,8 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.content.Intent
 import android.os.Build
+import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat.*
 import androidx.work.*
@@ -16,6 +16,7 @@ import backend.services.async.Async
 import backend.services.callbacks.Cancelable
 import backend.services.callbacks.Function0Void
 import backend.services.callbacks.Function1Void
+import backend.services.db.NotificationDB
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -153,31 +154,32 @@ class BackendServicesNotificationsClient {
             return Cancelable { job.cancel() }
         }
 
-        private suspend fun clickedImpl(context: Context, id: Int) {
+        private suspend fun clickedImpl(context: Context, notifications: List<NotificationDB>) {
             Client.init(context)
             try {
-                Client.httpRequest("/${Client.options!!.projectId}/notifications/clicked?id=$id") as JSONObject
+                val ids = TextUtils.join(",", notifications.map { it.id })
+                Client.httpRequest("/${Client.options!!.projectId}/notifications/clicked?ids=$ids")
             } catch (e: NotOKException) {
                 Log.e(javaClass.simpleName, "error: ${e.message}")
             }
         }
 
 
-        internal suspend fun clicked(context: Context, id: Int) {
-            withContext(Async.coroutineContext) { clickedImpl(context, id) }
+        internal suspend fun clicked(context: Context, notifications: List<NotificationDB>) {
+            withContext(Async.coroutineContext) { clickedImpl(context, notifications) }
         }
 
         @JvmStatic
         @JvmOverloads
         internal fun clicked(
             context: Context,
-            id: Int,
+            notifications: List<NotificationDB>,
             callback: Function0Void? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
             val job = Async.launch {
                 try {
-                    clickedImpl(context, id)
+                    clickedImpl(context, notifications)
                     callback?.invoke()
                 } catch (e: Exception) {
                     onError?.invoke(e)

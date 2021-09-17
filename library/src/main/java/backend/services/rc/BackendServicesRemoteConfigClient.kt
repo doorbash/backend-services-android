@@ -11,7 +11,6 @@ import backend.services.async.Async
 import backend.services.callbacks.Cancelable
 import backend.services.callbacks.Function0Void
 import backend.services.callbacks.Function1Void
-import backend.services.notifications.NotificationsWorker
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray

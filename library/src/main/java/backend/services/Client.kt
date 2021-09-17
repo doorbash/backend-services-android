@@ -43,7 +43,7 @@ object Client {
             ).build()
     }
 
-    suspend fun httpRequest(path: String): Any {
+    suspend fun httpRequest(path: String): Any? {
         val url = "${options!!.baseUrl}${path}"
         Log.d(javaClass.simpleName, "httpRequest(): sending request to $url")
         val request = Request.Builder().url(url).build()
@@ -54,7 +54,7 @@ object Client {
         if (resultJson["ok"] != true) {
             throw NotOKException(resultJson["error"] as String)
         }
-        return resultJson["result"]
+        return if (resultJson.has("result")) resultJson["result"] else null
     }
 }
 
