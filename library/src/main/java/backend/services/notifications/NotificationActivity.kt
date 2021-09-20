@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.core.app.TaskStackBuilder
 import backend.services.db.DatabaseHelper
 import backend.services.db.NotificationDB
+import backend.services.db.insertNotification
 import backend.services.notifications.ActionType.ACTIVITY
 import backend.services.notifications.ActionType.LINK
 

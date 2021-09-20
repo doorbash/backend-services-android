@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import backend.services.db.DatabaseHelper
+import backend.services.db.deleteNotifications
+import backend.services.db.getNotifications
 
 class NotificationsWorker(val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
