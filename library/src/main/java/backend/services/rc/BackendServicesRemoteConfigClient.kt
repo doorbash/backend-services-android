@@ -54,6 +54,7 @@ class BackendServicesRemoteConfigClient {
             }
             Log.d(javaClass.simpleName, "remote config: version: $version")
             val edit = rcSharedPreferences.edit()
+            edit.clear()
             for (key in data.keys()) {
                 when (val value = data.get(key)) {
                     is Boolean -> edit.putBoolean(key, value)
