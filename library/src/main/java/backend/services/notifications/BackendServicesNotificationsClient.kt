@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MINUTES
 
 private const val MIN_FETCH_INTERVAL = 10 // minutes
 private const val NOTIFICATIONS_SHARED_PREF_NAME = "backend.services.notifications"
@@ -204,12 +205,19 @@ class BackendServicesNotificationsClient {
         }
 
         @JvmStatic
-        public fun enqueueWorker(context: Context) {
+        @JvmOverloads
+        public fun enqueueWorker(
+            context: Context,
+            repeatInterval: Long = 20,
+            repeatIntervalTimeUnit: TimeUnit = MINUTES,
+            initDelay: Long = 10,
+            initDelayTimeUnit: TimeUnit = MINUTES
+        ) {
             createNotificationChannel(context)
             val notificationsWorker = PeriodicWorkRequestBuilder<NotificationsWorker>(
-                15,
-                TimeUnit.MINUTES
-            ).setInitialDelay(10, TimeUnit.MINUTES).setConstraints(
+                repeatInterval,
+                repeatIntervalTimeUnit
+            ).setInitialDelay(initDelay, initDelayTimeUnit).setConstraints(
                 Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
             ).addTag("notifications").build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(

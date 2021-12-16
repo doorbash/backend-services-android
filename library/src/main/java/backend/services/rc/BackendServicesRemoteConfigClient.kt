@@ -16,6 +16,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.HOURS
+import java.util.concurrent.TimeUnit.MINUTES
 
 private const val MIN_FETCH_INTERVAL = 10 // minutes
 private const val RC_DATA_SHARED_PREF_NAME = "backend.services.rc"
@@ -169,11 +171,18 @@ class BackendServicesRemoteConfigClient {
         }
 
         @JvmStatic
-        public fun enqueueWorker(context: Context) {
+        @JvmOverloads
+        public fun enqueueWorker(
+            context: Context,
+            repeatInterval: Long = 3,
+            repeatIntervalTimeUnit: TimeUnit = HOURS,
+            initDelay: Long = 30,
+            initDelayTimeUnit: TimeUnit = MINUTES
+        ) {
             val notificationsWorker = PeriodicWorkRequestBuilder<RemoteConfigWorker>(
-                3,
-                TimeUnit.HOURS
-            ).setInitialDelay(30, TimeUnit.MINUTES).setConstraints(
+                repeatInterval,
+                repeatIntervalTimeUnit
+            ).setInitialDelay(initDelay, initDelayTimeUnit).setConstraints(
                 Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
             ).addTag("rc").build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
