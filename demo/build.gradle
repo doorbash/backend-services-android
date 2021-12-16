@@ -16,8 +16,8 @@ android {
 
     defaultConfig {
         applicationId "backend.services.app"
-        minSdk 21
-        targetSdk 31
+        minSdk 19
+        targetSdk 32
         versionCode 1
         versionName "1.0"
 
@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.3.1")
+    implementation("androidx.appcompat:appcompat:1.4.0")
     implementation implementation(project(':library',))
 
 }
