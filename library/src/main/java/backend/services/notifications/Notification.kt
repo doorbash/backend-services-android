@@ -55,7 +55,7 @@ class Notification(
                         putExtra("action", nAction.action)
                         putExtra("extra", nAction.extra)
                     },
-                    FLAG_CANCEL_CURRENT
+                    FLAG_CANCEL_CURRENT or FLAG_IMMUTABLE
                 )
             )
             .setAutoCancel(true)
