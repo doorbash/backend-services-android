@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MINUTES
 
@@ -52,6 +53,7 @@ class BackendServicesNotificationsClient {
                 SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME,
                 ""
             )
+            val lastTimeDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(lastTime)
             val result = try {
                 Client.httpRequest("/${Client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
             } catch (e: NotOKException) {
@@ -63,6 +65,11 @@ class BackendServicesNotificationsClient {
             val list = ArrayList<Notification>()
             for (i in 0 until notifications.length()) {
                 val nobj = notifications[i] as JSONObject
+
+                val activeTime =
+                    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse((nobj["active_time"] as String))
+
+                if (!activeTime.after(lastTimeDate)) continue
 
                 val id = nobj["id"] as Int
 
