@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.doorbash:backend-services-android:1.0.4'
+    implementation 'com.github.doorbash:backend-services-android:1.0.5'
 }
 ```
 
