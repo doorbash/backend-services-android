@@ -49,10 +49,11 @@ class NotificationActivity : Activity() {
                     javaClass.simpleName,
                     "error while sending click event for notification $id: ${e.message}"
                 )
-                DatabaseHelper(context).use {
-                    if (it.insertNotification(NotificationDB(id))) {
+                DatabaseHelper(context).apply {
+                    if (insertNotification(NotificationDB(id))) {
                         Log.d(javaClass.simpleName, "inserted notification $id into database")
                     }
+                    close()
                 }
             },
         )
