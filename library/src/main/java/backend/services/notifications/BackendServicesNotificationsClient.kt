@@ -53,7 +53,9 @@ class BackendServicesNotificationsClient {
                 SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME,
                 ""
             )
-            val lastTimeDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(lastTime)
+            val lastTimeDate =
+                if (lastTime != "") SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(lastTime)
+                else null
             val result = try {
                 Client.httpRequest("/${Client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
             } catch (e: NotOKException) {
@@ -69,7 +71,7 @@ class BackendServicesNotificationsClient {
                 val activeTime =
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse((nobj["active_time"] as String))
 
-                if (!activeTime.after(lastTimeDate)) continue
+                if (lastTimeDate != null && !activeTime.after(lastTimeDate)) continue
 
                 val id = nobj["id"] as Int
 
