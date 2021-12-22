@@ -16,4 +16,24 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null
         NotificationDB.upgrade(db)
         onCreate(db)
     }
+
+    inline fun <R> use(block: (DatabaseHelper) -> R): R {
+        var closed = false
+        try {
+            return block(this)
+        } catch (e: Exception) {
+            closed = true
+            try {
+                close()
+            } catch (closeException: Exception) {
+                // eat the closeException as we are already throwing the original cause
+                // and we don't want to mask the real exception
+            }
+            throw e
+        } finally {
+            if (!closed) {
+                close()
+            }
+        }
+    }
 }

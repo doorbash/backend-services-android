@@ -11,16 +11,18 @@ import backend.services.db.getNotifications
 class NotificationsWorker(val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        DatabaseHelper(context).apply {
-            val notifications = getNotifications(10)
+        DatabaseHelper(context).use { db ->
+            val notifications = db.getNotifications(10)
             if (notifications != null && notifications.isNotEmpty()) {
-                Log.d(javaClass.simpleName,"read ${notifications.size} notifications from database")
+                Log.d(
+                    javaClass.simpleName,
+                    "read ${notifications.size} notifications from database"
+                )
                 Log.d(javaClass.simpleName, notifications.toString())
                 BackendServicesNotificationsClient.clicked(context, notifications)
-                val numAffectedRows = deleteNotifications(notifications)
+                val numAffectedRows = db.deleteNotifications(notifications)
                 Log.d(javaClass.simpleName, "deleted $numAffectedRows notifications from database")
             }
-            close()
         }
         val notifications = BackendServicesNotificationsClient.fetch(context)
         Log.d(javaClass.simpleName, "notifications: $notifications")
