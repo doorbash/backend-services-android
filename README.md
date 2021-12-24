@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.doorbash:backend-services-android:1.0.6'
+    implementation 'com.github.doorbash:backend-services-android:1.0.7'
 }
 ```
 
@@ -18,11 +18,11 @@ dependencies {
 ```java
 Client.init(this, new ClientOptions(
         BuildConfig.VERSION_CODE,
-        "com.example.project",
+        BuildConfig.APPLICATION_ID,
         "https://your.domain.com/api",
         10,
         false,
-        R.drawable.ic_demo_notification_icon
+        R.drawable.ic_notification_icon
 ));
 BackendServicesNotificationsClient.enqueueWorker(this);
 BackendServicesRemoteConfigClient.enqueueWorker(this);
