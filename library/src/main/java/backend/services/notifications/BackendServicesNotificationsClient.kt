@@ -23,9 +23,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.HOURS
 import java.util.concurrent.TimeUnit.MINUTES
 
-private const val MIN_FETCH_INTERVAL = 10 // minutes
+private const val MIN_FETCH_INTERVAL = 15 // minutes
 private const val NOTIFICATIONS_SHARED_PREF_NAME = "backend.services.notifications"
 private const val SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH = "notifications_last_fetch_time"
 private const val SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME = "____last_time____"
@@ -56,12 +57,17 @@ class BackendServicesNotificationsClient {
             val lastTimeDate =
                 if (lastTime != "") SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(lastTime)
                 else null
+
             val result = try {
                 Client.httpRequest("/${Client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
             } catch (e: NotOKException) {
                 Log.e(javaClass.simpleName, "error: ${e.message}")
                 return arrayListOf()
+            } finally {
+                sharedPreferences.edit().putLong(SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH, now)
+                    .commit()
             }
+
             val notifications = result["notifications"] as JSONArray
             val time = result["time"] as String
             val list = ArrayList<Notification>()
@@ -134,10 +140,6 @@ class BackendServicesNotificationsClient {
             notificationsSharedPreferences
                 .edit()
                 .putString(SHARED_PREFS_KEY_NOTIFICATIONS_LAST_TIME, time)
-                .commit()
-
-            sharedPreferences.edit()
-                .putLong(SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH, now)
                 .commit()
 
             return list
@@ -217,8 +219,8 @@ class BackendServicesNotificationsClient {
         @JvmOverloads
         public fun enqueueWorker(
             context: Context,
-            repeatInterval: Long = 20,
-            repeatIntervalTimeUnit: TimeUnit = MINUTES,
+            repeatInterval: Long = 1,
+            repeatIntervalTimeUnit: TimeUnit = HOURS,
             initDelay: Long = 10,
             initDelayTimeUnit: TimeUnit = MINUTES
         ) {

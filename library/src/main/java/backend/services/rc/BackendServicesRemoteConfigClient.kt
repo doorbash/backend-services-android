@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.HOURS
 import java.util.concurrent.TimeUnit.MINUTES
 
-private const val MIN_FETCH_INTERVAL = 10 // minutes
+private const val MIN_FETCH_INTERVAL = 15 // minutes
 private const val RC_DATA_SHARED_PREF_NAME = "backend.services.rc"
 private const val SHARED_PREFS_KEY_RC_LAST_FETCH = "rc_last_fetch_time"
 private const val SHARED_PREFS_KEY_RC_VERSION = "____version____"
@@ -48,6 +48,8 @@ class BackendServicesRemoteConfigClient {
             } catch (e: NotOKException) {
                 Log.e(javaClass.simpleName, "error: ${e.message}")
                 return
+            } finally {
+                sharedPreferences.edit().putLong(SHARED_PREFS_KEY_RC_LAST_FETCH, now).commit()
             }
             val data = result.getJSONObject("data")
             val version = result.getInt("version")
@@ -81,7 +83,6 @@ class BackendServicesRemoteConfigClient {
             }
             edit.putInt(SHARED_PREFS_KEY_RC_VERSION, version)
             edit.commit()
-            sharedPreferences.edit().putLong(SHARED_PREFS_KEY_RC_LAST_FETCH, now).commit()
         }
 
         public suspend fun fetch(context: Context) {
