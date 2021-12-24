@@ -62,11 +62,12 @@ class BackendServicesNotificationsClient {
                 Client.httpRequest("/${Client.options!!.projectId}/notifications?time=$lastTime") as JSONObject
             } catch (e: NotOKException) {
                 Log.e(javaClass.simpleName, "error: ${e.message}")
-                return arrayListOf()
-            } finally {
                 sharedPreferences.edit().putLong(SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH, now)
                     .commit()
+                return arrayListOf()
             }
+            sharedPreferences.edit().putLong(SHARED_PREFS_KEY_NOTIFICATIONS_LAST_FETCH, now)
+                .commit()
 
             val notifications = result["notifications"] as JSONArray
             val time = result["time"] as String
@@ -219,8 +220,8 @@ class BackendServicesNotificationsClient {
         @JvmOverloads
         public fun enqueueWorker(
             context: Context,
-            repeatInterval: Long = 1,
-            repeatIntervalTimeUnit: TimeUnit = HOURS,
+            repeatInterval: Long = 20,
+            repeatIntervalTimeUnit: TimeUnit = MINUTES,
             initDelay: Long = 10,
             initDelayTimeUnit: TimeUnit = MINUTES
         ) {

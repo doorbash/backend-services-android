@@ -43,14 +43,16 @@ class BackendServicesRemoteConfigClient {
                     MODE_PRIVATE
                 )
             val lastVersion = rcSharedPreferences.getInt(SHARED_PREFS_KEY_RC_VERSION, 0)
+
             val result = try {
                 Client.httpRequest("/${Client.options!!.projectId}/rc?version=$lastVersion") as JSONObject
             } catch (e: NotOKException) {
                 Log.e(javaClass.simpleName, "error: ${e.message}")
-                return
-            } finally {
                 sharedPreferences.edit().putLong(SHARED_PREFS_KEY_RC_LAST_FETCH, now).commit()
+                return
             }
+            sharedPreferences.edit().putLong(SHARED_PREFS_KEY_RC_LAST_FETCH, now).commit()
+
             val data = result.getJSONObject("data")
             val version = result.getInt("version")
             if (lastVersion > 0 && version <= lastVersion) {
