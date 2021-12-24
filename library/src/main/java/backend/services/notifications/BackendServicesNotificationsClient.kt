@@ -9,6 +9,8 @@ import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat.*
 import androidx.work.*
+import androidx.work.ExistingPeriodicWorkPolicy.KEEP
+import androidx.work.ExistingPeriodicWorkPolicy.REPLACE
 import backend.services.Client
 import backend.services.NotOKException
 import backend.services.SHARED_PREFERENCES_NAME
@@ -234,7 +236,7 @@ class BackendServicesNotificationsClient {
             ).addTag("notifications").build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 NOTIFICATIONS_WORKER_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                if (Client.update) REPLACE else KEEP,
                 notificationsWorker
             )
         }

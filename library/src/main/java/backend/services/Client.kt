@@ -2,6 +2,8 @@ package backend.services
 
 import android.content.Context
 import android.util.Log
+import backend.services.notifications.BackendServicesNotificationsClient
+import backend.services.rc.BackendServicesRemoteConfigClient
 import backend.services.shared.unSafeOkHttpClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -22,6 +24,7 @@ class NotOKException(message: String?) : Exception(message)
 object Client {
     public var options: ClientOptions? = null
     private lateinit var httpClient: OkHttpClient
+    internal var update = false
 
     @JvmStatic
     public fun init(context: Context, opts: ClientOptions? = null): Client {
@@ -29,7 +32,7 @@ object Client {
             options = ClientOptions.load(context)
         } else {
             options = opts
-            options?.save(context)
+            update = options?.save(context) == true
         }
         initHttpClient()
         return this
@@ -73,11 +76,15 @@ class ClientOptions(
         if (!projectRegex.matches(projectId)) throw Exception("bad project id")
     }
 
-    public fun save(context: Context) {
+    public fun save(context: Context): Boolean {
         val sharedPreferences = context.getSharedPreferences(
             SHARED_PREFERENCES_NAME,
             Context.MODE_PRIVATE
         )
+
+        val oldVersionCode = sharedPreferences.getInt(SHARED_PREFS_KEY_VERSION_CODE, 0)
+        val update = oldVersionCode > 0 && versionCode > oldVersionCode
+
         sharedPreferences.edit()
             .putInt(SHARED_PREFS_KEY_VERSION_CODE, versionCode)
             .putString(SHARED_PREFS_KEY_PROJECT_ID, projectId)
@@ -86,6 +93,8 @@ class ClientOptions(
             .putBoolean(SHARED_PREFS_KEY_INSECURE, insecure)
             .putInt(SHARED_PREFS_KEY_NOTIFICATION_ICON, notificationIcon)
             .commit()
+
+        return update
     }
 
     companion object {
