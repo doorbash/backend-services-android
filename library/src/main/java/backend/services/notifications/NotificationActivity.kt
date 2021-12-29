@@ -80,5 +80,7 @@ class NotificationActivity : Activity() {
                 Intent(Intent.ACTION_VIEW, Uri.parse(extra)).addFlags(FLAG_ACTIVITY_NEW_TASK)
             )
         }
+
+        finish()
     }
 }

@@ -25,7 +25,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeUnit.HOURS
 import java.util.concurrent.TimeUnit.MINUTES
 
 private const val MIN_FETCH_INTERVAL = 15 // minutes
@@ -103,7 +102,8 @@ class BackendServicesNotificationsClient {
                     }
 
                 val style = when (if (nobj.has("style")) nobj.getString("style") else "") {
-                    "big" -> NotificationStyle.BIG_TEXT
+                    "big-text" -> NotificationStyle.BIG_TEXT
+                    "big-image" -> NotificationStyle.BIG_IMAGE
                     else -> NotificationStyle.NORMAL
                 }
 
@@ -126,13 +126,18 @@ class BackendServicesNotificationsClient {
                     else -> continue
                 }
 
+                val bigText = if (nobj.has("big-text")) nobj.getString("big-text") else ""
+                val bigImage = if (nobj.has("big-image")) nobj.getString("big-image") else ""
+
                 list.add(
                     Notification(
                         id,
                         title,
                         text,
+                        bigText,
                         icon,
                         image,
+                        bigImage,
                         priority,
                         style,
                         action

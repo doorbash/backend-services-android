@@ -4,13 +4,11 @@ import android.app.PendingIntent.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
+import backend.services.notifications.NotificationStyle.*
+import backend.services.util.tryLoadBitmap
 
 enum class ActionType {
     LINK,
@@ -24,15 +22,18 @@ data class NotificationAction(
 
 enum class NotificationStyle {
     NORMAL,
-    BIG_TEXT
+    BIG_TEXT,
+    BIG_IMAGE
 }
 
 class Notification(
     val id: Int,
     val title: String,
     val text: String,
+    val bigText: String,
     val icon: Int,
     val image: String,
+    val bigImage: String,
     val priority: Int,
     val style: NotificationStyle,
     val nAction: NotificationAction
@@ -41,7 +42,7 @@ class Notification(
     fun show(context: Context) {
         Log.d(javaClass.simpleName, "showing notification: $this")
 
-        var builder = NotificationCompat.Builder(context, NOTIFICATIONS_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, NOTIFICATIONS_CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(text)
@@ -54,45 +55,34 @@ class Notification(
                         putExtra("id", id)
                         putExtra("action", nAction.action)
                         putExtra("extra", nAction.extra)
+
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     },
                     FLAG_CANCEL_CURRENT or FLAG_IMMUTABLE
                 )
             )
             .setAutoCancel(true)
 
-        if (style == NotificationStyle.BIG_TEXT) {
-            builder = builder.setStyle(
+        if (style == BIG_TEXT) {
+            builder.setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(text)
+                    .bigText(bigText)
             )
         }
 
-        fun _show() {
-            with(NotificationManagerCompat.from(context)) {
-                notify(id, builder.build())
+        tryLoadBitmap(context, image) { imageResult: Bitmap? ->
+            if (imageResult != null) {
+                builder.setLargeIcon(imageResult)
+            }
+            tryLoadBitmap(context, bigImage) { bigImageResult: Bitmap? ->
+                if(bigImageResult != null) {
+                    builder.setStyle(
+                        NotificationCompat.BigPictureStyle()
+                            .bigPicture(bigImageResult)
+                    )
+                }
+                NotificationManagerCompat.from(context).notify(id, builder.build())
             }
         }
-
-        if (image != "") {
-            Glide.with(context)
-                .asBitmap()
-                .load(image)
-                .timeout(10000)
-                .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(
-                        resource: Bitmap,
-                        transition: Transition<in Bitmap>?
-                    ) {
-                        builder = builder.setLargeIcon(resource)
-                        _show()
-                    }
-
-                    override fun onLoadCleared(placeholder: Drawable?) {}
-
-                    override fun onLoadFailed(errorDrawable: Drawable?) {
-                        _show()
-                    }
-                })
-        } else _show()
     }
 }
