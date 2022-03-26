@@ -77,12 +77,20 @@ public class MainActivity extends AppCompatActivity {
                 "https://avatars.githubusercontent.com/u/5982526?v=4",
                 "https://i.kym-cdn.com/entries/icons/original/000/026/638/cat.jpg",
                 NotificationCompat.PRIORITY_MAX,
-                NotificationStyle.NORMAL,
+                NotificationStyle.BIG_IMAGE,
                 new NotificationAction(
                         ActionType.LINK,
                         "https://github.com/doorbash/backend-services"
                 )
         ).show(this));
+        BackendServicesRemoteConfigClient.fetch(this, () -> {
+            Log.d(TAG, "fetch complete!!");
+            Log.d(TAG, Thread.currentThread().getName());
+        }, error -> {
+            Log.e(TAG, "fetch error!!");
+            Log.e(TAG, error.getMessage());
+            Log.d(TAG, Thread.currentThread().getName());
+        });
     }
 
 
@@ -94,9 +102,11 @@ public class MainActivity extends AppCompatActivity {
         if (remoteConfigJob != null) remoteConfigJob.cancel();
         remoteConfigJob = BackendServicesRemoteConfigClient.fetch(this, () -> {
             Log.d(TAG, "fetch complete!!");
+            Log.d(TAG, Thread.currentThread().getName());
         }, error -> {
             Log.e(TAG, "fetch error!!");
             Log.e(TAG, error.getMessage());
+            Log.d(TAG, Thread.currentThread().getName());
         });
     }
     protected void onPause() {

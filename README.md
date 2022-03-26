@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.doorbash:backend-services-android:1.2.1'
+    implementation 'com.github.doorbash:backend-services-android:1.3.0'
 }
 ```
 
@@ -20,7 +20,7 @@ Client.init(this, new ClientOptions(
         BuildConfig.VERSION_CODE,
         BuildConfig.APPLICATION_ID,
         "https://your.domain.com/api",
-        10,
+        20,
         false,
         R.drawable.ic_notification_icon
 ));

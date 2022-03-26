@@ -3,9 +3,12 @@ package backend.services.rc
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
-import androidx.work.*
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy.KEEP
 import androidx.work.ExistingPeriodicWorkPolicy.REPLACE
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import backend.services.Client
 import backend.services.NotOKException
 import backend.services.SHARED_PREFERENCES_NAME
@@ -13,8 +16,7 @@ import backend.services.async.Async
 import backend.services.callbacks.Cancelable
 import backend.services.callbacks.Function0Void
 import backend.services.callbacks.Function1Void
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
@@ -90,7 +92,9 @@ class BackendServicesRemoteConfigClient {
         }
 
         public suspend fun fetch(context: Context) {
-            withContext(Async.coroutineContext) { fetchImpl(context) }
+            Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+                fetchImpl(context)
+            }
         }
 
         @JvmStatic
@@ -100,13 +104,14 @@ class BackendServicesRemoteConfigClient {
             callback: Function0Void? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launch {
+            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
                 try {
                     fetchImpl(context)
-                    callback?.invoke()
                 } catch (e: Exception) {
                     onError?.invoke(e)
+                    return@launchWithLockAndTimeout
                 }
+                callback?.invoke()
             }
             return Cancelable { job.cancel() }
         }

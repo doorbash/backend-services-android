@@ -154,7 +154,9 @@ class BackendServicesNotificationsClient {
         }
 
         public suspend fun fetch(context: Context): List<Notification> {
-            return withContext(Async.coroutineContext) { fetchImpl(context) }
+            return Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+                fetchImpl(context)
+            }
         }
 
         @JvmStatic
@@ -164,12 +166,14 @@ class BackendServicesNotificationsClient {
             callback: Function1Void<List<Notification>>? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launch {
-                try {
-                    callback?.invoke(fetchImpl(context))
+            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
+                val list = try {
+                    fetchImpl(context)
                 } catch (e: Exception) {
                     onError?.invoke(e)
+                    return@launchWithLockAndTimeout
                 }
+                callback?.invoke(list)
             }
             return Cancelable { job.cancel() }
         }
@@ -186,7 +190,9 @@ class BackendServicesNotificationsClient {
 
 
         internal suspend fun clicked(context: Context, notifications: List<NotificationDB>) {
-            withContext(Async.coroutineContext) { clickedImpl(context, notifications) }
+            Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+                clickedImpl(context, notifications)
+            }
         }
 
         @JvmStatic
@@ -197,13 +203,14 @@ class BackendServicesNotificationsClient {
             callback: Function0Void? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launch {
+            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
                 try {
                     clickedImpl(context, notifications)
-                    callback?.invoke()
                 } catch (e: Exception) {
                     onError?.invoke(e)
+                    return@launchWithLockAndTimeout
                 }
+                callback?.invoke()
             }
             return Cancelable { job.cancel() }
         }

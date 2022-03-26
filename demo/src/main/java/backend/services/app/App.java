@@ -14,7 +14,7 @@ public class App extends Application {
                 BuildConfig.VERSION_CODE,
                 "com.example.project",
                 "https://192.168.1.201/api",
-                10,
+                20,
                 true,
                 R.drawable.ic_demo_notification_icon
         ));
