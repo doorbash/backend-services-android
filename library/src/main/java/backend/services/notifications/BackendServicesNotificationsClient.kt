@@ -154,7 +154,7 @@ class BackendServicesNotificationsClient {
         }
 
         public suspend fun fetch(context: Context): List<Notification> {
-            return Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+            return Async.withLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
                 fetchImpl(context)
             }
         }
@@ -166,15 +166,16 @@ class BackendServicesNotificationsClient {
             callback: Function1Void<List<Notification>>? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
-                val list = try {
-                    fetchImpl(context)
-                } catch (e: Exception) {
-                    onError?.invoke(e)
-                    return@launchWithLockAndTimeout
+            val job =
+                Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
+                    val list = try {
+                        fetchImpl(context)
+                    } catch (e: Exception) {
+                        onError?.invoke(e)
+                        return@launchWithLockAndTimeout
+                    }
+                    callback?.invoke(list)
                 }
-                callback?.invoke(list)
-            }
             return Cancelable { job.cancel() }
         }
 
@@ -190,7 +191,7 @@ class BackendServicesNotificationsClient {
 
 
         internal suspend fun clicked(context: Context, notifications: List<NotificationDB>) {
-            Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+            Async.withLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
                 clickedImpl(context, notifications)
             }
         }
@@ -203,15 +204,16 @@ class BackendServicesNotificationsClient {
             callback: Function0Void? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
-                try {
-                    clickedImpl(context, notifications)
-                } catch (e: Exception) {
-                    onError?.invoke(e)
-                    return@launchWithLockAndTimeout
+            val job =
+                Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
+                    try {
+                        clickedImpl(context, notifications)
+                    } catch (e: Exception) {
+                        onError?.invoke(e)
+                        return@launchWithLockAndTimeout
+                    }
+                    callback?.invoke()
                 }
-                callback?.invoke()
-            }
             return Cancelable { job.cancel() }
         }
 

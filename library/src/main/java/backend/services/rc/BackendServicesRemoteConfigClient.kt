@@ -92,7 +92,7 @@ class BackendServicesRemoteConfigClient {
         }
 
         public suspend fun fetch(context: Context) {
-            Async.withLockAndTimeout(Client.init(context).options!!.timeout) {
+            Async.withLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
                 fetchImpl(context)
             }
         }
@@ -104,15 +104,16 @@ class BackendServicesRemoteConfigClient {
             callback: Function0Void? = null,
             onError: Function1Void<Exception>? = null
         ): Cancelable {
-            val job = Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout) {
-                try {
-                    fetchImpl(context)
-                } catch (e: Exception) {
-                    onError?.invoke(e)
-                    return@launchWithLockAndTimeout
+            val job =
+                Async.launchWithLockAndTimeout(Client.init(context).options!!.timeout * 1000) {
+                    try {
+                        fetchImpl(context)
+                    } catch (e: Exception) {
+                        onError?.invoke(e)
+                        return@launchWithLockAndTimeout
+                    }
+                    callback?.invoke()
                 }
-                callback?.invoke()
-            }
             return Cancelable { job.cancel() }
         }
 
