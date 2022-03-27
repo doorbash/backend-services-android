@@ -45,7 +45,7 @@ class BackendServicesNotificationsClient {
             val now = System.currentTimeMillis()
             if (now - lastFetchTime < MIN_FETCH_INTERVAL * 60 * 1000)
                 throw Exception("fetch interval limit: please try ${(MIN_FETCH_INTERVAL * 60 * 1000 - now + lastFetchTime) / 1000} seconds later")
-            Client.init(context)
+//            Client.init(context)
             val notificationsSharedPreferences =
                 context.getSharedPreferences(
                     "${Client.options!!.projectId}-$NOTIFICATIONS_SHARED_PREF_NAME",
@@ -180,7 +180,7 @@ class BackendServicesNotificationsClient {
         }
 
         private suspend fun clickedImpl(context: Context, notifications: List<NotificationDB>) {
-            Client.init(context)
+//            Client.init(context)
             try {
                 val ids = TextUtils.join(",", notifications.map { it.id })
                 Client.httpRequest("/${Client.options!!.projectId}/notifications/clicked?ids=$ids")

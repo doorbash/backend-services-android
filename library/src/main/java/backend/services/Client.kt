@@ -52,7 +52,7 @@ object Client {
         val request = Request.Builder().url(url).build()
         val res = httpClient.newCall(request).await()
         val body = res.body!!.string()
-        Log.d(javaClass.simpleName, "${res.code} ---  $body")
+//        Log.d(javaClass.simpleName, "${res.code} ---  $body")
         val resultJson = JSONObject(body)
         if (resultJson["ok"] != true) {
             throw NotOKException(resultJson["error"] as String)

@@ -40,7 +40,7 @@ class BackendServicesRemoteConfigClient {
             val now = System.currentTimeMillis()
             if (now - lastFetchTime < MIN_FETCH_INTERVAL * 60 * 1000)
                 throw Exception("fetch interval limit: please try ${(MIN_FETCH_INTERVAL * 60 * 1000 - now + lastFetchTime) / 1000} seconds later")
-            Client.init(context)
+//            Client.init(context)
             val rcSharedPreferences =
                 context.getSharedPreferences(
                     "${Client.options!!.projectId}-$RC_DATA_SHARED_PREF_NAME",
