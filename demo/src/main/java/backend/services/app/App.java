@@ -16,6 +16,7 @@ public class App extends Application {
                 "https://192.168.1.201/api",
                 20,
                 true,
+                "Notifications",
                 R.drawable.ic_demo_notification_icon
         ));
         BackendServicesNotificationsClient.enqueueWorker(this);

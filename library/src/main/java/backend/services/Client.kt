@@ -10,6 +10,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 internal const val SHARED_PREFERENCES_NAME = "backend.services"
 private const val SHARED_PREFS_KEY_VERSION_CODE = "version_code"
@@ -33,6 +34,7 @@ object Client {
         } else {
             options = opts
             update = options?.save(context) == true
+            BackendServicesNotificationsClient.createNotificationChannel(context, opts.notificationChannelName)
         }
         initHttpClient()
         return this
@@ -59,6 +61,26 @@ object Client {
         }
         return if (resultJson.has("result")) resultJson["result"] else null
     }
+
+    public fun newMessage(context: Context, message: JSONObject) {
+        val type = message.getString("type") ?: return
+        val data = message.getJSONObject("data") ?: return
+        init(context)
+        when (type) {
+            "rc" -> {
+                thread {
+                    BackendServicesRemoteConfigClient.updateSharedPreferences(
+                        context,
+                        options!!.projectId,
+                        data
+                    )
+                }
+            }
+            "notification" -> {
+                BackendServicesNotificationsClient.createNotification(data)?.show(context)
+            }
+        }
+    }
 }
 
 class ClientOptions(
@@ -67,6 +89,7 @@ class ClientOptions(
     val baseUrl: String,
     val timeout: Long,
     val insecure: Boolean,
+    val notificationChannelName: String?,
     val notificationIcon: Int,
 ) {
 
@@ -125,6 +148,7 @@ class ClientOptions(
                 baseUrl,
                 timeout,
                 insecure,
+                null,
                 notificationIcon,
             )
         }

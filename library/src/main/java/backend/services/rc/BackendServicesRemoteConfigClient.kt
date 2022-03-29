@@ -33,6 +33,8 @@ class RemoteConfigBadVersionException(message: String?) : Exception(message)
 
 class BackendServicesRemoteConfigClient {
     companion object {
+        private val dataLock = Any()
+
         private suspend fun fetchImpl(context: Context) {
             val sharedPreferences =
                 context.getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE)
@@ -57,38 +59,55 @@ class BackendServicesRemoteConfigClient {
             }
             sharedPreferences.edit().putLong(SHARED_PREFS_KEY_RC_LAST_FETCH, now).commit()
 
-            val data = result.getJSONObject("data")
-            val version = result.getInt("version")
-            if (lastVersion > 0 && version <= lastVersion) {
-                throw RemoteConfigBadVersionException("expected version > $lastVersion. get version $version")
-            }
-            Log.d(javaClass.simpleName, "remote config: version: $version")
-            val edit = rcSharedPreferences.edit()
-            edit.clear()
-            for (key in data.keys()) {
-                when (val value = data.get(key)) {
-                    is Boolean -> edit.putBoolean(key, value)
-                    is Int -> edit.putInt(key, value)
-                    is Long -> edit.putLong(key, value)
-                    is Float -> edit.putFloat(key, value)
-                    is Double -> edit.putFloat(key, value.toFloat())
-                    is String -> edit.putString(key, value)
-                    is JSONArray -> {
-                        val set = mutableSetOf<String>()
-                        for (i in 0 until value.length()) {
-                            if (value.get(i) is String) {
-                                set.add(value.getString(i))
-                            } else {
-                                throw Exception("bad value at $key[$i]: $value, type: ${value.javaClass.name}")
-                            }
-                        }
-                        edit.putStringSet(key, set)
-                    }
-                    else -> throw Exception("bad value at $key: $value, type: ${value.javaClass.name}")
+            updateSharedPreferences(context, Client.options!!.projectId, result)
+        }
+
+        public fun updateSharedPreferences(
+            context: Context,
+            projectId: String,
+            result: JSONObject
+        ) {
+            synchronized(dataLock) {
+                val rcSharedPreferences =
+                    context.getSharedPreferences(
+                        "$projectId-$RC_DATA_SHARED_PREF_NAME",
+                        MODE_PRIVATE
+                    )
+                val lastVersion = rcSharedPreferences.getInt(SHARED_PREFS_KEY_RC_VERSION, 0)
+
+                val data = result.getJSONObject("data")
+                val version = result.getInt("version")
+                if (lastVersion > 0 && version <= lastVersion) {
+                    throw RemoteConfigBadVersionException("expected version > $lastVersion. get version $version")
                 }
+                Log.d(javaClass.simpleName, "remote config: version: $version")
+                val edit = rcSharedPreferences.edit()
+                edit.clear()
+                for (key in data.keys()) {
+                    when (val value = data.get(key)) {
+                        is Boolean -> edit.putBoolean(key, value)
+                        is Int -> edit.putInt(key, value)
+                        is Long -> edit.putLong(key, value)
+                        is Float -> edit.putFloat(key, value)
+                        is Double -> edit.putFloat(key, value.toFloat())
+                        is String -> edit.putString(key, value)
+                        is JSONArray -> {
+                            val set = mutableSetOf<String>()
+                            for (i in 0 until value.length()) {
+                                if (value.get(i) is String) {
+                                    set.add(value.getString(i))
+                                } else {
+                                    throw Exception("bad value at $key[$i]: $value, type: ${value.javaClass.name}")
+                                }
+                            }
+                            edit.putStringSet(key, set)
+                        }
+                        else -> throw Exception("bad value at $key: $value, type: ${value.javaClass.name}")
+                    }
+                }
+                edit.putInt(SHARED_PREFS_KEY_RC_VERSION, version)
+                edit.commit()
             }
-            edit.putInt(SHARED_PREFS_KEY_RC_VERSION, version)
-            edit.commit()
         }
 
         public suspend fun fetch(context: Context) {

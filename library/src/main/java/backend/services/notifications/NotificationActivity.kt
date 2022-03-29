@@ -31,6 +31,7 @@ class NotificationActivity : Activity() {
         val id = intent.getIntExtra("id", 0)
         val action = intent.getSerializableExtra("action") ?: return
         val extra = intent.getStringExtra("extra") ?: return
+        val clickReport = intent.getBooleanExtra("click_report", true)
 
         if (id == 0) return
 
@@ -38,24 +39,26 @@ class NotificationActivity : Activity() {
         Log.d(javaClass.simpleName, "action: $action")
         Log.d(javaClass.simpleName, "extra: $extra")
 
-        BackendServicesNotificationsClient.clicked(
-            context,
-            arrayListOf(NotificationDB(id)),
-            {
-                Log.d(javaClass.simpleName, "sending click event for notification $id is done!")
-            },
-            { e ->
-                Log.d(
-                    javaClass.simpleName,
-                    "error while sending click event for notification $id: ${e.message}"
-                )
-                DatabaseHelper(context).use {
-                    if (it.insertNotification(NotificationDB(id))) {
-                        Log.d(javaClass.simpleName, "inserted notification $id into database")
+        if (clickReport) {
+            BackendServicesNotificationsClient.clicked(
+                context,
+                arrayListOf(NotificationDB(id)),
+                {
+                    Log.d(javaClass.simpleName, "sending click event for notification $id is done!")
+                },
+                { e ->
+                    Log.d(
+                        javaClass.simpleName,
+                        "error while sending click event for notification $id: ${e.message}"
+                    )
+                    DatabaseHelper(context).use {
+                        if (it.insertNotification(NotificationDB(id))) {
+                            Log.d(javaClass.simpleName, "inserted notification $id into database")
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
+        }
 
         when (action) {
             ACTIVITY -> {

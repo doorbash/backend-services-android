@@ -36,7 +36,8 @@ class Notification(
     val bigImage: String,
     val priority: Int,
     val style: NotificationStyle,
-    val nAction: NotificationAction
+    val nAction: NotificationAction,
+    val clickReport: Boolean = true
 ) {
 
     fun show(context: Context) {
@@ -55,6 +56,7 @@ class Notification(
                         putExtra("id", id)
                         putExtra("action", nAction.action)
                         putExtra("extra", nAction.extra)
+                        putExtra("click_report", clickReport)
 
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     },
@@ -75,7 +77,7 @@ class Notification(
                 builder.setLargeIcon(imageResult)
             }
             tryLoadBitmap(context, bigImage) { bigImageResult: Bitmap? ->
-                if(bigImageResult != null) {
+                if (bigImageResult != null) {
                     builder.setStyle(
                         NotificationCompat.BigPictureStyle()
                             .bigPicture(bigImageResult)

@@ -36,7 +36,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationAction(
                         ActionType.ACTIVITY,
                         MainActivity.class.getName()
-                )
+                ),
+                false
         ).show(this));
         findViewById(R.id.notification_to_other_activity).setOnClickListener(view -> new Notification(
                 ++id,
@@ -51,7 +52,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationAction(
                         ActionType.ACTIVITY,
                         OtherActivity.class.getName()
-                )
+                ),
+                false
         ).show(this));
         findViewById(R.id.notification_to_other_activity_stack).setOnClickListener(view -> new Notification(
                 ++id,
@@ -66,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationAction(
                         ActionType.ACTIVITY,
                         MainActivity.class.getName() + " " + OtherActivity.class.getName()
-                )
+                ),
+                false
         ).show(this));
         findViewById(R.id.notification_to_link).setOnClickListener(view -> new Notification(
                 ++id,
@@ -81,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationAction(
                         ActionType.LINK,
                         "https://github.com/doorbash/backend-services"
-                )
+                ),
+                false
         ).show(this));
         BackendServicesRemoteConfigClient.fetch(this, () -> {
             Log.d(TAG, "fetch complete!!");
@@ -92,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, Thread.currentThread().getName());
         });
     }
-
 
 
     @Override
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, Thread.currentThread().getName());
         });
     }
+
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");

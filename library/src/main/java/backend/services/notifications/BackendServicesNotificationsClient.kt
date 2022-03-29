@@ -19,13 +19,13 @@ import backend.services.callbacks.Cancelable
 import backend.services.callbacks.Function0Void
 import backend.services.callbacks.Function1Void
 import backend.services.db.NotificationDB
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MINUTES
+import kotlin.collections.ArrayList
 
 private const val MIN_FETCH_INTERVAL = 15 // minutes
 private const val NOTIFICATIONS_SHARED_PREF_NAME = "backend.services.notifications"
@@ -75,74 +75,16 @@ class BackendServicesNotificationsClient {
             val list = ArrayList<Notification>()
             for (i in 0 until notifications.length()) {
                 val nobj = notifications[i] as JSONObject
+                if (nobj.has("active_time")) {
+                    val activeTime =
+                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse((nobj["active_time"] as String))
 
-                val activeTime =
-                    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse((nobj["active_time"] as String))
-
-                if (lastTimeDate != null && !activeTime.after(lastTimeDate)) continue
-
-                val id = nobj["id"] as Int
-
-                val title = nobj["title"] as String
-
-                val text = nobj["text"] as String
-
-                val icon = Client.options!!.notificationIcon
-
-                val image = if (nobj.has("image")) nobj.getString("image") else ""
-
-                val priority =
-                    when (if (nobj.has("priority")) nobj["priority"] as String else "default") {
-                        "high" -> PRIORITY_HIGH
-                        "low" -> PRIORITY_LOW
-                        "min" -> PRIORITY_MIN
-                        "max" -> PRIORITY_MAX
-                        "default" -> PRIORITY_DEFAULT
-                        else -> throw Exception("bad priority")
-                    }
-
-                val style = when (if (nobj.has("style")) nobj.getString("style") else "") {
-                    "big-text" -> NotificationStyle.BIG_TEXT
-                    "big-image" -> NotificationStyle.BIG_IMAGE
-                    else -> NotificationStyle.NORMAL
+                    if (lastTimeDate != null && !activeTime.after(lastTimeDate)) continue
                 }
-
-                val action = when (if (nobj.has("action")) nobj.getString("action") else null) {
-                    "activity" -> NotificationAction(
-                        ActionType.ACTIVITY,
-                        nobj["extra"] as String,
-                    )
-                    "link" -> NotificationAction(
-                        ActionType.LINK,
-                        nobj["extra"] as String
-                    )
-                    "update" -> {
-                        val parts = nobj.getString("extra").split(" ")
-                        if (parts.size != 2) continue
-                        val version = parts[1].toIntOrNull() ?: continue
-                        if (Client.options!!.versionCode >= version) continue
-                        NotificationAction(ActionType.LINK, parts[0])
-                    }
-                    else -> continue
+                val notification = createNotification(nobj)
+                if (notification != null) {
+                    list.add(notification)
                 }
-
-                val bigText = if (nobj.has("big-text")) nobj.getString("big-text") else ""
-                val bigImage = if (nobj.has("big-image")) nobj.getString("big-image") else ""
-
-                list.add(
-                    Notification(
-                        id,
-                        title,
-                        text,
-                        bigText,
-                        icon,
-                        image,
-                        bigImage,
-                        priority,
-                        style,
-                        action
-                    )
-                )
             }
 
             notificationsSharedPreferences
@@ -151,6 +93,73 @@ class BackendServicesNotificationsClient {
                 .commit()
 
             return list
+        }
+
+        public fun createNotification(nobj: JSONObject): Notification? {
+            val clickReport =
+                if (nobj.has("click_report")) nobj.getBoolean("click_report") else true
+
+            val id = nobj["id"] as Int
+
+            val title = nobj["title"] as String
+
+            val text = nobj["text"] as String
+
+            val icon = Client.options!!.notificationIcon
+
+            val image = if (nobj.has("image")) nobj.getString("image") else ""
+
+            val priority =
+                when (if (nobj.has("priority")) nobj["priority"] as String else "default") {
+                    "high" -> PRIORITY_HIGH
+                    "low" -> PRIORITY_LOW
+                    "min" -> PRIORITY_MIN
+                    "max" -> PRIORITY_MAX
+                    "default" -> PRIORITY_DEFAULT
+                    else -> throw Exception("bad priority")
+                }
+
+            val style = when (if (nobj.has("style")) nobj.getString("style") else "") {
+                "big-text" -> NotificationStyle.BIG_TEXT
+                "big-image" -> NotificationStyle.BIG_IMAGE
+                else -> NotificationStyle.NORMAL
+            }
+
+            val action = when (if (nobj.has("action")) nobj.getString("action") else null) {
+                "activity" -> NotificationAction(
+                    ActionType.ACTIVITY,
+                    nobj["extra"] as String,
+                )
+                "link" -> NotificationAction(
+                    ActionType.LINK,
+                    nobj["extra"] as String
+                )
+                "update" -> {
+                    val parts = nobj.getString("extra").split(" ")
+                    if (parts.size != 2) return null
+                    val version = parts[1].toIntOrNull() ?: return null
+                    if (Client.options!!.versionCode >= version) return null
+                    NotificationAction(ActionType.LINK, parts[0])
+                }
+                else -> return null
+            }
+
+            val bigText = if (nobj.has("big-text")) nobj.getString("big-text") else ""
+            val bigImage = if (nobj.has("big-image")) nobj.getString("big-image") else ""
+
+            return Notification(
+                id,
+                title,
+                text,
+                bigText,
+                icon,
+                image,
+                bigImage,
+                priority,
+                style,
+                action,
+                clickReport
+            )
         }
 
         public suspend fun fetch(context: Context): List<Notification> {
@@ -217,13 +226,13 @@ class BackendServicesNotificationsClient {
             return Cancelable { job.cancel() }
         }
 
-
-        private fun createNotificationChannel(context: Context) {
+        @JvmStatic
+        fun createNotificationChannel(context: Context, name: String? = null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val importance = NotificationManager.IMPORTANCE_HIGH
                 val channel = NotificationChannel(
                     NOTIFICATIONS_CHANNEL_ID,
-                    NOTIFICATIONS_CHANNEL_NAME,
+                    name ?: NOTIFICATIONS_CHANNEL_NAME,
                     importance
                 )
                 val notificationManager: NotificationManager =
@@ -241,7 +250,6 @@ class BackendServicesNotificationsClient {
             initDelay: Long = 10,
             initDelayTimeUnit: TimeUnit = MINUTES
         ) {
-            createNotificationChannel(context)
             val notificationsWorker = PeriodicWorkRequestBuilder<NotificationsWorker>(
                 repeatInterval,
                 repeatIntervalTimeUnit
