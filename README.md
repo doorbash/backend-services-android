@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.doorbash:backend-services-android:1.3.2'
+    implementation 'com.github.doorbash:backend-services-android:1.3.4'
 }
 ```
 
@@ -22,6 +22,7 @@ Client.init(this, new ClientOptions(
         "https://your.domain.com/api",
         20,
         false,
+        "Notifications",
         R.drawable.ic_notification_icon
 ));
 BackendServicesNotificationsClient.enqueueWorker(this);
