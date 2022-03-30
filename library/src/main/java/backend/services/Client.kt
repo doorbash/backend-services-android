@@ -35,7 +35,10 @@ object Client {
         } else {
             options = opts
             update = options?.save(context) == true
-            BackendServicesNotificationsClient.createNotificationChannel(context, opts.notificationChannelName)
+            BackendServicesNotificationsClient.createNotificationChannel(
+                context,
+                opts.notificationChannelName
+            )
         }
         initHttpClient()
         return this
@@ -71,11 +74,15 @@ object Client {
         when (type) {
             "rc" -> {
                 thread {
-                    BackendServicesRemoteConfigClient.updateSharedPreferences(
-                        context,
-                        options!!.projectId,
-                        data
-                    )
+                    try {
+                        BackendServicesRemoteConfigClient.updateSharedPreferences(
+                            context,
+                            options!!.projectId,
+                            data
+                        )
+                    } catch (_: java.lang.Exception) {
+
+                    }
                 }
             }
             "notification" -> {
