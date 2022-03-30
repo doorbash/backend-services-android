@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
@@ -62,9 +63,10 @@ object Client {
         return if (resultJson.has("result")) resultJson["result"] else null
     }
 
-    public fun newMessage(context: Context, message: JSONObject) {
-        val type = message.getString("type") ?: return
-        val data = message.getJSONObject("data") ?: return
+    public fun newMessageData(context: Context, messageData: Map<String, String>) {
+        val type = messageData["type"] ?: return
+        if (!messageData.containsKey("data")) return
+        val data = JSONObject(messageData["data"])
         init(context)
         when (type) {
             "rc" -> {
